@@ -1,0 +1,10 @@
+{
+  "name": "campus-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Campus events, directory and a shared lost and found board.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.1"
+  }
+}

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campus Hub — events, directory and lost &amp; found</title>
+<meta name="description" content="Campus events, a searchable directory of campus locations, and a shared lost and found board.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Campus Hub — visual system
+   base: deep petrol night · glass panels · aurora field
+   type: Instrument Serif (display) + Inter Tight (interface)
+   ============================================================ */
+:root{
+  --void:#05100E;
+  --panel:rgba(255,255,255,.045);
+  --panel-2:rgba(255,255,255,.075);
+  --edge:rgba(255,255,255,.10);
+  --edge-hi:rgba(255,255,255,.22);
+  --mist:#EAF3EF;
+  --dim:#8AA49B;
+  --amber:#F5B547;
+  --aqua:#46E3C0;
+  --coral:#FF6F5B;
+  --leaf:#7CE29A;
+  --accent:var(--amber);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 80px);scroll-behavior:smooth}
+body{
+  margin:0;background:var(--void);color:var(--mist);
+  font-family:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.55;letter-spacing:-.005em;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+::selection{background:var(--accent);color:#06100E}
+
+/* ---------- aurora field + grain ---------- */
+.aurora{position:fixed;inset:-20vh -10vw;z-index:-2;filter:blur(90px);opacity:.75;pointer-events:none}
+.blob{position:absolute;border-radius:50%;mix-blend-mode:screen;will-change:transform}
+.b1{width:60vw;height:60vw;background:radial-gradient(circle,#0E6B5C,transparent 68%);top:-12%;left:-8%;animation:drift1 26s ease-in-out infinite}
+.b2{width:52vw;height:52vw;background:radial-gradient(circle,#7A5A12,transparent 66%);top:18%;right:-14%;animation:drift2 32s ease-in-out infinite}
+.b3{width:46vw;height:46vw;background:radial-gradient(circle,#123E6E,transparent 68%);bottom:-18%;left:22%;animation:drift3 38s ease-in-out infinite}
+@keyframes drift1{50%{transform:translate3d(8vw,6vh,0) scale(1.15)}}
+@keyframes drift2{50%{transform:translate3d(-10vw,10vh,0) scale(.88)}}
+@keyframes drift3{50%{transform:translate3d(6vw,-8vh,0) scale(1.1)}}
+.grain{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.26;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+
+/* ---------- entrance choreography ---------- */
+.rise{opacity:0;transform:translateY(18px);animation:rise .9s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.d1{animation-delay:.06s}.d2{animation-delay:.14s}.d3{animation-delay:.22s}.d4{animation-delay:.3s}.d5{animation-delay:.4s}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(56px,11vh,108px) 0 34px;position:relative}
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim);font-weight:500;margin:0 0 20px}
+.live{width:7px;height:7px;border-radius:50%;background:var(--leaf);box-shadow:0 0 0 0 rgba(124,226,154,.6);animation:pulse 2.6s infinite;flex:none}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(124,226,154,0)}100%{box-shadow:0 0 0 0 rgba(124,226,154,0)}}
+h1.display{
+  font-family:"Instrument Serif",Georgia,serif;font-weight:400;
+  font-size:clamp(44px,9vw,100px);line-height:.95;letter-spacing:-.025em;margin:0;max-width:17ch;
+}
+h1.display em{font-style:italic;color:var(--amber)}
+.sub{max-width:54ch;color:var(--dim);font-size:clamp(16px,2.1vw,19px);font-weight:300;margin:24px 0 0}
+
+.stats{display:flex;flex-wrap:wrap;gap:12px;margin:38px 0 0}
+.stat{
+  flex:1 1 150px;background:var(--panel);border:1px solid var(--edge);border-radius:16px;
+  padding:18px 20px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.stat b{display:block;font-family:"Instrument Serif",serif;font-size:40px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.stat span{font-size:13.5px;color:var(--dim)}
+.stat:nth-child(1) b{color:var(--amber)}
+.stat:nth-child(2) b{color:var(--aqua)}
+.stat:nth-child(3) b{color:var(--coral)}
+
+/* ---------- sticky nav ---------- */
+.navbar{position:sticky;z-index:40;padding:14px 0;top:env(safe-area-inset-top,0px)}
+.navbar::before{content:"";position:absolute;inset:0;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:linear-gradient(to bottom,rgba(5,16,14,.86),rgba(5,16,14,.42));mask-image:linear-gradient(to bottom,#000 62%,transparent)}
+.tabs{position:relative;display:flex;gap:4px;padding:5px;border:1px solid var(--edge);border-radius:999px;
+  background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);width:fit-content;max-width:100%;overflow:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.glider{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:var(--accent);
+  transition:transform .5s cubic-bezier(.16,1,.3,1),width .5s cubic-bezier(.16,1,.3,1),background .4s ease;z-index:0}
+.tab{position:relative;z-index:1;appearance:none;border:0;background:transparent;font:inherit;font-size:14.5px;font-weight:500;
+  color:var(--dim);padding:10px 20px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:color .35s ease}
+.tab:hover{color:var(--mist)}
+.tab[aria-selected="true"]{color:#06100E;font-weight:600}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+main{padding:36px 0 96px}
+.sec-head{margin:0 0 26px}
+h2{font-family:"Instrument Serif",serif;font-weight:400;font-size:clamp(30px,4.6vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0}
+.lede{color:var(--dim);font-weight:300;max-width:60ch;margin:10px 0 0}
+
+/* ---------- controls ---------- */
+.searchbar{position:relative;margin:0 0 16px}
+.searchbar svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--dim);fill:none;stroke-width:1.8}
+input[type=search],input[type=text],textarea{
+  width:100%;font:inherit;color:var(--mist);background:var(--panel);border:1px solid var(--edge);
+  border-radius:14px;padding:15px 18px 15px 46px;transition:border-color .3s,background .3s,box-shadow .3s;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+input::placeholder,textarea::placeholder{color:#6C837B}
+input[type=search]:focus,input[type=text]:focus,textarea:focus{
+  outline:none;border-color:var(--edge-hi);background:var(--panel-2);box-shadow:0 0 0 4px rgba(255,255,255,.04)}
+input[type=search]::-webkit-search-cancel-button{filter:invert(1) opacity(.5)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.chip{
+  appearance:none;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--dim);
+  background:var(--panel);border:1px solid var(--edge);border-radius:999px;padding:8px 16px;
+  transition:color .3s,border-color .3s,background .3s,transform .3s;
+}
+.chip:hover{color:var(--mist);border-color:var(--edge-hi);transform:translateY(-1px)}
+.chip[aria-pressed="true"]{background:var(--mist);border-color:var(--mist);color:#06100E;font-weight:600}
+.count{font-size:13.5px;color:var(--dim);margin:0 0 18px;font-variant-numeric:tabular-nums}
+
+/* ---------- cards ---------- */
+.list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.card{
+  position:relative;overflow:hidden;display:flex;gap:20px;align-items:flex-start;
+  background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:22px 24px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transition:transform .45s cubic-bezier(.16,1,.3,1),border-color .4s,background .4s,opacity .4s;
+  opacity:0;transform:translateY(14px);animation:rise .6s cubic-bezier(.16,1,.3,1) forwards;
+}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.09),transparent 62%)}
+.card:hover{transform:translateY(-3px);border-color:var(--edge-hi);background:var(--panel-2)}
+.card:hover::before{opacity:1}
+.card::after{content:"";position:absolute;left:0;top:18%;bottom:18%;width:2px;border-radius:2px;
+  background:var(--bar,transparent);opacity:0;transform:scaleY(.4);transition:opacity .4s,transform .5s cubic-bezier(.16,1,.3,1)}
+.card:hover::after{opacity:1;transform:scaleY(1)}
+.card.pending{opacity:.55;pointer-events:none}
+.card-main{flex:1;min-width:0}
+.card h3{margin:0 0 5px;font-size:18.5px;font-weight:600;letter-spacing:-.015em}
+.card p{margin:0;color:var(--dim);font-weight:300;font-size:15px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--dim)}
+
+.datechip{
+  flex:0 0 auto;width:62px;text-align:center;border-radius:14px;padding:10px 0;
+  background:linear-gradient(160deg,rgba(245,181,71,.22),rgba(245,181,71,.06));
+  border:1px solid rgba(245,181,71,.3);line-height:1.05;
+}
+.datechip b{display:block;font-family:"Instrument Serif",serif;font-size:26px;font-weight:400;color:var(--amber)}
+.datechip i{display:block;font-style:normal;font-size:11px;font-weight:600;letter-spacing:.1em;color:rgba(245,181,71,.8)}
+
+.tag{display:inline-block;font-size:12px;font-weight:500;letter-spacing:.02em;
+  border:1px solid var(--edge);border-radius:999px;padding:3px 10px;color:var(--dim)}
+.tag.lost{border-color:rgba(255,111,91,.4);color:var(--coral);background:rgba(255,111,91,.08)}
+.tag.found{border-color:rgba(124,226,154,.4);color:var(--leaf);background:rgba(124,226,154,.08)}
+.dot{width:3px;height:3px;border-radius:50%;background:var(--dim);opacity:.6}
+
+.ghost{
+  appearance:none;border:1px solid var(--edge);background:transparent;color:var(--mist);font:inherit;
+  font-size:13.5px;font-weight:500;padding:10px 18px;border-radius:999px;cursor:pointer;white-space:nowrap;
+  transition:background .3s,border-color .3s,transform .3s;
+}
+.ghost:hover{background:var(--mist);color:#06100E;border-color:var(--mist);transform:translateY(-1px)}
+
+.pin{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(160deg,rgba(70,227,192,.2),rgba(70,227,192,.04));border:1px solid rgba(70,227,192,.26)}
+.pin svg{width:17px;height:17px;stroke:var(--aqua);fill:none;stroke-width:1.7}
+
+.empty{border:1px dashed var(--edge);border-radius:20px;padding:52px 26px;text-align:center;color:var(--dim)}
+.empty b{display:block;color:var(--mist);font-family:"Instrument Serif",serif;font-size:24px;font-weight:400;margin-bottom:6px}
+.skeleton{height:96px;border-radius:20px;border:1px solid var(--edge);
+  background:linear-gradient(100deg,rgba(255,255,255,.03) 30%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 70%);
+  background-size:220% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{to{background-position:-120% 0}}
+
+/* ---------- lost & found ---------- */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:30px;align-items:start}
+form.post{
+  background:linear-gradient(170deg,rgba(255,255,255,.085),rgba(255,255,255,.03));
+  border:1px solid var(--edge);border-radius:24px;padding:26px;position:sticky;top:96px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+form.post h3{margin:0 0 4px;font-family:"Instrument Serif",serif;font-weight:400;font-size:25px}
+form.post > p{margin:0 0 20px;font-size:13.5px;color:var(--dim);font-weight:300}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--dim);margin-bottom:6px}
+.field input,.field textarea{padding-left:16px;border-radius:12px;font-size:15px}
+textarea{min-height:82px;resize:vertical;line-height:1.5}
+.toggle{position:relative;display:flex;border:1px solid var(--edge);border-radius:12px;padding:4px;background:rgba(0,0,0,.2)}
+.toggle-glide{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:9px;background:var(--coral);
+  transition:transform .45s cubic-bezier(.16,1,.3,1),background .35s ease}
+.toggle button{position:relative;z-index:1;flex:1;appearance:none;border:0;background:transparent;font:inherit;
+  font-size:14px;font-weight:500;padding:9px;cursor:pointer;color:var(--dim);transition:color .3s}
+.toggle button[aria-pressed="true"]{color:#06100E;font-weight:600}
+.submit{
+  width:100%;appearance:none;border:0;border-radius:12px;background:var(--mist);color:#06100E;
+  font:inherit;font-weight:600;font-size:15px;padding:14px;cursor:pointer;margin-top:6px;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s,opacity .3s;
+}
+.submit:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(234,243,239,.5)}
+.submit:active{transform:translateY(0)}
+.submit[disabled]{opacity:.5;pointer-events:none}
+.hint{font-size:12.5px;color:var(--dim);margin:12px 0 0;min-height:1.2em;transition:color .3s}
+.hint.warn{color:var(--coral)}
+.hint.ok{color:var(--leaf)}
+.sync{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--dim);
+  border:1px solid var(--edge);border-radius:999px;padding:6px 14px;margin:0 0 16px;background:var(--panel)}
+.sync .live{width:6px;height:6px;animation:none;box-shadow:none}
+.sync.offline .live{background:var(--amber)}
+.sync.error .live{background:var(--coral)}
+.resolve{appearance:none;border:1px solid var(--edge);background:transparent;font:inherit;font-size:12.5px;font-weight:500;
+  color:var(--dim);cursor:pointer;padding:8px 14px;border-radius:999px;transition:all .3s;white-space:nowrap}
+.resolve:hover{color:var(--mist);border-color:var(--edge-hi)}
+.card.done{opacity:.5}
+.card.done h3{text-decoration:line-through}
+
+/* ---------- dialog ---------- */
+dialog{
+  border:1px solid var(--edge-hi);border-radius:26px;padding:0;max-width:540px;width:calc(100% - 32px);
+  background:linear-gradient(170deg,#14231F,#0A1715);color:var(--mist);box-shadow:0 40px 100px -30px #000;
+}
+dialog[open]{animation:pop .45s cubic-bezier(.16,1,.3,1)}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.96)}}
+dialog::backdrop{background:rgba(3,10,9,.7);backdrop-filter:blur(6px)}
+.dlg-body{padding:32px}
+.dlg-kicker{font-size:12.5px;color:var(--amber);font-weight:500;margin:0 0 10px}
+.dlg-body h3{margin:0 0 12px;font-family:"Instrument Serif",serif;font-weight:400;font-size:32px;line-height:1.1;letter-spacing:-.02em}
+.dlg-body > p{margin:0;color:var(--dim);font-weight:300}
+.dlg-body dl{display:grid;grid-template-columns:110px 1fr;gap:10px 16px;margin:24px 0 0;font-size:15px;
+  border-top:1px solid var(--edge);padding-top:20px}
+.dlg-body dt{color:var(--dim);font-size:13.5px;font-weight:400}
+.dlg-body dd{margin:0}
+.dlg-close{width:100%;appearance:none;border:1px solid var(--edge);background:transparent;color:var(--mist);
+  font:inherit;font-weight:500;padding:13px;border-radius:12px;cursor:pointer;margin-top:26px;transition:all .3s}
+.dlg-close:hover{background:var(--mist);color:#06100E}
+
+footer{border-top:1px solid var(--edge);padding:28px 0 48px;color:var(--dim);font-size:13.5px;font-weight:300}
+
+/* ---------- responsive ---------- */
+@media (max-width:820px){
+  .split{grid-template-columns:1fr}
+  form.post{position:static;order:-1}
+  .card{padding:18px;gap:14px;border-radius:18px}
+  .stat b{font-size:34px}
+}
+@media (max-width:560px){
+  .card{flex-wrap:wrap}
+  .ghost,.resolve{width:100%;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .rise,.card{opacity:1;transform:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="wrap hero">
+  <p class="eyebrow rise d1"><span class="live"></span><span id="clock">Campus Hub</span></p>
+  <h1 class="display rise d2">Find what's on, where it is, and <em>what you've lost.</em></h1>
+  <p class="sub rise d3">A single reference point for campus activity: upcoming events across all clubs and schools, a searchable directory of every block and facility, and a shared board for lost and recovered property.</p>
+
+  <div class="stats rise d4">
+    <div class="stat"><b data-countto="8" id="s-events">0</b><span>events scheduled</span></div>
+    <div class="stat"><b data-countto="34" id="s-places">0</b><span>locations listed</span></div>
+    <div class="stat"><b id="s-open">—</b><span>items awaiting collection</span></div>
+  </div>
+</header>
+
+<div class="navbar">
+  <div class="wrap">
+    <nav class="tabs rise d5" role="tablist" aria-label="Sections">
+      <span class="glider" aria-hidden="true"></span>
+      <button class="tab" id="tab-events" role="tab" aria-controls="panel-events" aria-selected="true" data-accent="var(--amber)">Events</button>
+      <button class="tab" id="tab-directory" role="tab" aria-controls="panel-directory" aria-selected="false" data-accent="var(--aqua)">Campus directory</button>
+      <button class="tab" id="tab-lostfound" role="tab" aria-controls="panel-lostfound" aria-selected="false" data-accent="var(--coral)">Lost &amp; found</button>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- ============ FEATURE 01: EVENT DISCOVERY ============ -->
+  <section id="panel-events" role="tabpanel" aria-labelledby="tab-events">
+    <div class="sec-head">
+      <h2>Upcoming events</h2>
+      <p class="lede">Talks, workshops, fixtures and auditions scheduled across campus. Search by title, venue or organiser, or filter by category.</p>
+    </div>
+
+    <div class="searchbar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="search" id="ev-search" placeholder="Search events, venues or organisers" aria-label="Search events">
+    </div>
+    <div class="chips" id="ev-chips" role="group" aria-label="Filter events by category"></div>
+    <p class="count" id="ev-count"></p>
+    <ul class="list" id="ev-list"></ul>
+  </section>
+
+  
+  <!-- ============ FEATURE 02: CAMPUS DIRECTORY ============ -->
+  <section id="panel-directory" role="tabpanel" aria-labelledby="tab-directory" hidden>
+    <div class="sec-head">
+      <h2>Campus directory</h2>
+      <p class="lede">Every academic block, office, hostel zone and facility on campus, with the building it belongs to and a summary of what it houses.</p>
+    </div>
+
+    <div class="searchbar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="search" id="dir-search" placeholder="Search by name, block or abbreviation" aria-label="Search campus locations">
+    </div>
+    <div class="chips" id="dir-chips" role="group" aria-label="Filter locations by category"></div>
+    <p class="count" id="dir-count"></p>
+    <ul class="list" id="dir-list"></ul>
+  </section>
+
+  <!-- ============ FEATURE 03: LOST & FOUND ============ -->
+  <section id="panel-lostfound" role="tabpanel" aria-labelledby="tab-lostfound" hidden>
+    <div class="sec-head">
+      <h2>Lost &amp; found</h2>
+      <p class="lede">Report an item you have misplaced, or list one you have recovered. Posts are shared with everyone using this site.</p>
+    </div>
+
+    <div class="split">
+      <div>
+        <p class="sync" id="lf-sync"><span class="live"></span><span id="lf-sync-text">Connecting to the shared board…</span></p>
+        <div class="searchbar">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" id="lf-search" placeholder="Search items, locations or descriptions" aria-label="Search lost and found posts">
+        </div>
+        <div class="chips" id="lf-chips" role="group" aria-label="Filter posts">
+          <button class="chip" type="button" data-f="all" aria-pressed="true">All posts</button>
+          <button class="chip" type="button" data-f="lost" aria-pressed="false">Lost</button>
+          <button class="chip" type="button" data-f="found" aria-pressed="false">Found</button>
+          <button class="chip" type="button" data-f="open" aria-pressed="false">Unresolved</button>
+        </div>
+        <p class="count" id="lf-count"></p>
+        <ul class="list" id="lf-list"><li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li></ul>
+      </div>
+
+      <form class="post" id="lf-form" novalidate>
+        <h3>Submit a report</h3>
+        <p>Visible to everyone on the board.</p>
+        <div class="field">
+          <span class="toggle" id="lf-kind" role="group" aria-label="Report type">
+            <span class="toggle-glide" aria-hidden="true"></span>
+            <button type="button" data-kind="lost" aria-pressed="true">I lost this</button>
+            <button type="button" data-kind="found" aria-pressed="false">I found this</button>
+          </span>
+        </div>
+        <div class="field">
+          <label for="lf-item">Item</label>
+          <input type="text" id="lf-item" placeholder="Blue steel water bottle" required maxlength="120">
+        </div>
+        <div class="field">
+          <label for="lf-desc">Description</label>
+          <textarea id="lf-desc" placeholder="Dented lid, name written on the base" maxlength="400"></textarea>
+        </div>
+        <div class="field">
+          <label for="lf-place">Location</label>
+          <input type="text" id="lf-place" placeholder="Technology Tower, ground floor" required maxlength="120">
+        </div>
+        <div class="field">
+          <label for="lf-contact">Contact</label>
+          <input type="text" id="lf-contact" placeholder="Email or phone number" maxlength="120">
+        </div>
+        <button class="submit" type="submit" id="lf-submit">Submit report</button>
+        <p class="hint" id="lf-hint">An item name and a location are required.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">Campus Hub · student project. Lost and found reports are stored on the server and shared across all visitors.</footer>
+
+<dialog id="dlg"><div class="dlg-body" id="dlg-body"></div></dialog>
+
+<script>
+/* ==================================================================
+   Campus Hub
+   Feature 01 Events · Feature 02 Directory · Feature 03 Lost & Found
+   ================================================================== */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- events data ---------------- */
+const EVENTS = [
+  { id:'e1', name:'Riviera auditions: Battle of the Bands', date:'2026-09-24', time:'6:00 PM',
+    venue:'Anna Auditorium', category:'Cultural', by:'Music Club',
+    about:'Open auditions for the inter-hostel band showcase. A drum kit and amplification are provided; participants should bring all other instruments. Each band is allotted a five-minute slot.' },
+  { id:'e2', name:'Hack the Campus: 24-hour build', date:'2026-09-27', time:'9:00 AM',
+    venue:'TT Seminar Hall 2', category:'Technical', by:'Coding Club',
+    about:'Teams of three build a working campus utility within a single day. Submissions are judged on usefulness and completeness rather than visual polish. Meals are provided throughout.' },
+  { id:'e3', name:'Guest lecture: designing for low bandwidth', date:'2026-09-29', time:'2:30 PM',
+    venue:'SJT 301', category:'Academic', by:'School of Computer Science',
+    about:'A practising engineer on building interfaces that remain usable on poor connections. Open to all years; attendance is credited towards the seminar requirement.' },
+  { id:'e4', name:'Inter-hostel football final', date:'2026-10-02', time:'4:45 PM',
+    venue:'Main Ground', category:'Sports', by:'Sports Council',
+    about:'The concluding fixture of the inter-hostel league. Stands open at 4:00 PM. Entry requires a valid student identity card.' },
+  { id:'e5', name:'Blood donation camp', date:'2026-10-04', time:'10:00 AM',
+    venue:'Health Centre lawn', category:'Social', by:'NSS Unit',
+    about:'Walk-in registration through the day, conducted with a certified blood bank. Donors should eat beforehand and carry photo identification. A rest area and refreshments are provided.' },
+  { id:'e6', name:'Robotics open lab', date:'2026-10-07', time:'5:00 PM',
+    venue:'CDMM, ground floor', category:'Technical', by:'Robotics Club',
+    about:'An open working session for ongoing projects. Mentors are available for assistance with wiring, motor drivers and embedded debugging. Observers are welcome.' },
+  { id:'e7', name:'Open mic: poetry and stand-up', date:'2026-10-09', time:'7:30 PM',
+    venue:'Open-air stage', category:'Cultural', by:'Literary Club',
+    about:'Registration opens an hour before the event. Each performer is allotted seven minutes, in any language.' },
+  { id:'e8', name:'Placement preparation: aptitude intensive', date:'2026-10-12', time:'11:00 AM',
+    venue:'SMV 115', category:'Academic', by:'Placement Cell',
+    about:'Three sessions covering quantitative aptitude, logical reasoning and verbal ability, concluding with a timed mock assessment. Final-year students are given seating priority.' }
+];
+
+/* ---------------- campus directory data ---------------- */
+const PLACES = [
+  /* Academic */
+  { id:'p1',  name:'Silver Jubilee Tower (SJT)', block:'SJT', category:'Academic',
+    about:'A principal academic block housing classrooms, faculty cabins and departmental laboratories. A cafeteria operates within the building.' },
+  { id:'p2',  name:'Technology Tower (TT)', block:'TT', category:'Academic',
+    about:'Academic block containing lecture galleries TT 028/029 and TT 233/234, the Dr. Ambedkar Auditorium on the ground floor and the Kamaraj Auditorium on the seventh floor.' },
+  { id:'p3',  name:'Main Building (MB)', block:'MB', category:'Academic',
+    about:'The original academic and administrative building, housing the Dr. M. Channa Reddy Auditorium on the ground floor and Rajaji Hall on the second floor.' },
+  { id:'p4',  name:'G. D. Naidu Block (GDN)', block:'GDN', category:'Academic',
+    about:'Academic block with classrooms and laboratories, an adjoining cafeteria, and the commemorative pillar installed nearby in January 2025.' },
+  { id:'p5',  name:'Sir M. Visvesvaraya Block (SMV)', block:'SMV', category:'Academic',
+    about:'Hexagonal academic block, commonly referred to as the Hexagon, with lecture halls and departmental offices.' },
+  { id:'p6',  name:'Centre for Disaster Mitigation and Management (CDMM)', block:'CDMM', category:'Academic',
+    about:'Specialised research centre and academic block, also used for club activities and laboratory sessions.' },
+  { id:'p7',  name:'Centre for Biomedical Research (CBMR)', block:'CBMR', category:'Academic',
+    about:'Research block dedicated to biomedical and life sciences work, including wet laboratories.' },
+  { id:'p8',  name:'Gandhi Block', block:'Gandhi Block', category:'Academic',
+    about:'Academic block housing the Era Sezhiyan Auditorium, a 462-seat venue used for departmental events and seminars.' },
+  { id:'p9',  name:'Pearl Research Park (PRP)', block:'PRP', category:'Academic',
+    about:'Research facility supporting funded projects, doctoral work and industry collaborations.' },
+  { id:'p10', name:'Smriti Building', block:'Smriti', category:'Academic',
+    about:'Academic building used for classes, project work and departmental functions.' },
+  { id:'p11', name:'Central Library', block:'Library', category:'Academic',
+    about:'Reference collections, journal archives, digital resources and discussion rooms. Rooms should be reserved in advance during examination periods.' },
+  { id:'p12', name:'Centre for Technical Support (CTS)', block:'CTS', category:'Academic',
+    about:'Technical support unit handling campus computing facilities, network access and related student requests.' },
+
+  /* Food */
+  { id:'p13', name:'Central Food Court (FC)', block:'Food Court', category:'Food',
+    about:'Multi-cuisine food court near the centre of campus, operated by external caterers at student rates.' },
+  { id:'p14', name:'SJT cafeteria', block:'SJT', category:'Food',
+    about:'Cafeteria within the Silver Jubilee Tower serving snacks, beverages and light meals between classes.' },
+  { id:'p15', name:'GDN cafeteria', block:'GDN', category:'Food',
+    about:'Cafeteria adjoining the G. D. Naidu Block, convenient for classes held in that wing.' },
+  { id:'p16', name:'Men\'s hostel messes', block:'Men\'s hostel zone', category:'Food',
+    about:'Mess facilities attached to the men\'s hostel blocks, offering multiple menu options across three daily meals. Guest coupons are issued at the mess counter.' },
+  { id:'p17', name:'Ladies\' hostel messes', block:'Ladies\' hostel zone', category:'Food',
+    about:'Mess facilities attached to the women\'s hostel blocks, with the same meal schedule and coupon system.' },
+  { id:'p18', name:'Hostel food kiosks', block:'Hostel zones', category:'Food',
+    about:'Kiosks within the hostel blocks serving snacks and beverages outside regular mess hours.' },
+
+  /* Hostel */
+  { id:'p19', name:'Men\'s hostel blocks', block:'Men\'s hostel zone', category:'Hostel',
+    about:'Eighteen residential blocks offering air-conditioned and non-air-conditioned rooms in single, double, triple, four and six-bedded configurations.' },
+  { id:'p20', name:'Ladies\' hostel blocks', block:'Ladies\' hostel zone', category:'Hostel',
+    about:'Six residential blocks with dedicated wardens, secured access and round-the-clock campus security.' },
+  { id:'p21', name:'Hostel administration office', block:'Hostel zones', category:'Hostel',
+    about:'Handles room allotment, block transfers, leave records and maintenance complaints. Approach the warden on duty outside office hours.' },
+  { id:'p22', name:'Hostel amenities: laundry, gym, utility shop', block:'Hostel zones', category:'Hostel',
+    about:'Laundry service, gymnasium, utility store and salon facilities available within the residential zones.' },
+
+  /* Administration */
+  { id:'p23', name:'Academic office', block:'MB', category:'Administration',
+    about:'Issues transcripts and bonafide certificates, and processes course registration corrections and re-examination requests.' },
+  { id:'p24', name:'Finance office and cash counter', block:'MB, ground floor', category:'Administration',
+    about:'Fee payments, receipts, refunds and scholarship documentation. The counter closes during the lunch interval.' },
+  { id:'p25', name:'Office of Students\' Welfare', block:'Administrative wing', category:'Administration',
+    about:'Oversees clubs, chapters and campus fests, and receives student grievances, including anti-ragging reports filed directly or through the student portal.' },
+  { id:'p26', name:'International Relations office (IR)', block:'Administrative wing', category:'Administration',
+    about:'Supports international students and outbound exchange programmes, including visa documentation and semester-abroad applications.' },
+  { id:'p27', name:'Health Centre', block:'Health Centre', category:'Administration',
+    about:'On-campus medical facility with doctors on duty, a pharmacy counter, first aid and ambulance services.' },
+  { id:'p28', name:'Counselling centre', block:'Student support wing', category:'Administration',
+    about:'Confidential counselling and mental health support for students, available by appointment and on referral.' },
+
+  /* Recreation */
+  { id:'p29', name:'Anna Auditorium', block:'Opposite the Main Building', category:'Recreation',
+    about:'The largest auditorium on campus, seating approximately 1,800 across 15,436 square feet, with central air conditioning, green rooms and a full stage. Used for major events and conferences.' },
+  { id:'p30', name:'Indoor stadium', block:'Sports complex', category:'Recreation',
+    about:'Courts for badminton, basketball and table tennis. Slots are booked at the counter against a student identity card.' },
+  { id:'p31', name:'Main ground', block:'Sports complex', category:'Recreation',
+    about:'Floodlit outdoor ground used for football and cricket fixtures, inter-hostel matches and morning practice sessions.' },
+  { id:'p32', name:'Swimming pool', block:'Sports complex', category:'Recreation',
+    about:'Campus swimming facility with scheduled sessions and separate timings. Registration is required before use.' },
+  { id:'p33', name:'Gymnasium', block:'Sports complex and hostel zones', category:'Recreation',
+    about:'Air-conditioned and standard gymnasium facilities available to residents and day scholars.' },
+  { id:'p34', name:'Open-air stage', block:'Central campus', category:'Recreation',
+    about:'Outdoor performance space used for club showcases, screenings and evening gatherings.' }
+];
+
+/* ---------------- tabs + sliding indicator ---------------- */
+const glider = $('.glider');
+function moveGlider(tab){
+  glider.style.width = tab.offsetWidth + 'px';
+  glider.style.transform = 'translateX(' + tab.offsetLeft + 'px)';
+  glider.style.background = tab.dataset.accent;
+  document.documentElement.style.setProperty('--accent', tab.dataset.accent);
+}
+$$('.tab').forEach(tab => tab.addEventListener('click', () => {
+  $$('.tab').forEach(t => {
+    const on = t === tab;
+    t.setAttribute('aria-selected', on);
+    $('#' + t.getAttribute('aria-controls')).hidden = !on;
+  });
+  moveGlider(tab);
+  stagger($('#' + tab.getAttribute('aria-controls')));
+}));
+window.addEventListener('resize', () => moveGlider($('.tab[aria-selected="true"]')));
+window.addEventListener('load', () => moveGlider($('.tab[aria-selected="true"]')));
+setTimeout(() => moveGlider($('.tab[aria-selected="true"]')), 250);   // after the webfont swaps in
+
+/* ---------------- card entrance + cursor spotlight ---------------- */
+function stagger(scope = document){
+  $$('.card', scope).forEach((c, i) => {
+    c.style.animation = 'none';
+    void c.offsetWidth;                                   // restart the animation
+    c.style.animation = '';
+    c.style.animationDelay = reduced ? '0s' : Math.min(i * 40, 400) + 'ms';
+  });
+}
+document.addEventListener('pointermove', e => {
+  const card = e.target.closest?.('.card');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+  card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+}, { passive:true });
+
+/* ---------------- chip filter builder ---------------- */
+function buildChips(container, values, onChange){
+  container.innerHTML = '';
+  ['All', ...values].forEach((v, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = v;
+    b.setAttribute('aria-pressed', i === 0);
+    b.addEventListener('click', () => {
+      $$('.chip', container).forEach(c => c.setAttribute('aria-pressed', c === b));
+      onChange(v === 'All' ? null : v);
+    });
+    container.appendChild(b);
+  });
+}
+
+/* ================= FEATURE 01 — EVENTS ================= */
+let evCat = null, evQuery = '';
+const EV_CATS = [...new Set(EVENTS.map(e => e.category))].sort();
+
+const fmtDate = iso => new Date(iso + 'T00:00:00')
+  .toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+function renderEvents(){
+  const q = evQuery.trim().toLowerCase();
+  const rows = EVENTS
+    .filter(e => !evCat || e.category === evCat)
+    .filter(e => !q || [e.name, e.venue, e.by, e.category, e.about].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  $('#ev-count').textContent = rows.length + (rows.length === 1 ? ' event' : ' events');
+
+  $('#ev-list').innerHTML = rows.length ? rows.map(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    return `<li class="card" style="--bar:var(--amber)">
+      <span class="datechip" aria-hidden="true">
+        <b>${d.getDate()}</b><i>${d.toLocaleString('en-IN',{month:'short'}).toUpperCase()}</i>
+      </span>
+      <span class="card-main">
+        <h3>${esc(e.name)}</h3>
+        <p>${esc(e.venue)}</p>
+        <span class="meta">
+          <span class="tag">${esc(e.category)}</span>
+          <span>${esc(e.time)}</span><span class="dot"></span><span>${esc(e.by)}</span>
+        </span>
+      </span>
+      <button class="ghost" data-ev="${e.id}">View details</button>
+    </li>`;
+  }).join('') : `<li class="empty"><b>No matching events</b>Try a different search term, or reset the category filter.</li>`;
+
+  stagger($('#panel-events'));
+}
+
+$('#ev-list').addEventListener('click', ev => {
+  const btn = ev.target.closest('[data-ev]');
+  if (!btn) return;
+  const e = EVENTS.find(x => x.id === btn.dataset.ev);
+  $('#dlg-body').innerHTML = `
+    <p class="dlg-kicker">${esc(e.category)} · ${esc(e.by)}</p>
+    <h3>${esc(e.name)}</h3>
+    <p>${esc(e.about)}</p>
+    <dl>
+      <dt>Date</dt><dd>${fmtDate(e.date)}</dd>
+      <dt>Start time</dt><dd>${esc(e.time)}</dd>
+      <dt>Venue</dt><dd>${esc(e.venue)}</dd>
+    </dl>
+    <button class="dlg-close" type="button">Close</button>`;
+  $('#dlg').showModal();
+});
+$('#dlg').addEventListener('click', e => {
+  if (e.target.closest('.dlg-close') || e.target.id === 'dlg') $('#dlg').close();
+});
+
+$('#ev-search').addEventListener('input', e => { evQuery = e.target.value; renderEvents(); });
+buildChips($('#ev-chips'), EV_CATS, v => { evCat = v; renderEvents(); });
+renderEvents();
+$('#s-events').dataset.countto = EVENTS.length;
+let dirCat = null, dirQuery = '';
+const DIR_CATS = ['Academic','Food','Hostel','Administration','Recreation'];
+const PIN = '<svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+
+function renderPlaces(){
+  const q = dirQuery.trim().toLowerCase();
+  const rows = PLACES
+    .filter(p => !dirCat || p.category === dirCat)
+    .filter(p => !q || [p.name, p.block, p.category, p.about].join(' ').toLowerCase().includes(q));
+
+  $('#dir-count').textContent = rows.length + (rows.length === 1 ? ' location' : ' locations');
+
+  $('#dir-list').innerHTML = rows.length ? rows.map(p => `<li class="card" style="--bar:var(--aqua)">
+      <span class="pin" aria-hidden="true">${PIN}</span>
+      <span class="card-main">
+        <h3>${esc(p.name)}</h3>
+        <p>${esc(p.about)}</p>
+        <span class="meta"><span class="tag">${esc(p.category)}</span><span>${esc(p.block)}</span></span>
+      </span>
+    </li>`).join('') : `<li class="empty"><b>No matching location</b>Search by abbreviation instead — SJT, TT, GDN, SMV — or select a category.</li>`;
+
+  stagger($('#panel-directory'));
+}
+
+$('#dir-search').addEventListener('input', e => { dirQuery = e.target.value; renderPlaces(); });
+buildChips($('#dir-chips'), DIR_CATS, v => { dirCat = v; renderPlaces(); });
+renderPlaces();
+$('#s-places').dataset.countto = PLACES.length;
+
+/* ================= FEATURE 03 — LOST & FOUND (shared) ================= */
+/* Posts live on the server via /api/lostfound (Netlify Function + Netlify Blobs),
+   so every visitor sees the same board. If the API is unreachable — for example
+   when index.html is opened straight from disk — the board falls back to this
+   browser's local storage so the feature still works offline.                  */
+
+const API = '/api/lostfound';
+const LOCAL_KEY = 'campushub.lostfound.fallback';
+
+let posts = [];
+let online = true;
+let lfFilter = 'all', lfQuery = '', lfKind = 'lost';
+
+function setSync(state, text){
+  const el = $('#lf-sync');
+  el.className = 'sync ' + state;
+  $('#lf-sync-text').textContent = text;
+}
+
+const loadLocal = () => {
+  try { const r = JSON.parse(localStorage.getItem(LOCAL_KEY)); return Array.isArray(r) ? r : []; }
+  catch { return []; }
+};
+const saveLocal = () => {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(posts)); } catch { /* storage unavailable */ }
+};
+
+async function api(method, body){
+  const res = await fetch(API, {
+    method,
+    headers: body ? { 'content-type':'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error('Request failed with status ' + res.status);
+  return res.json();
+}
+
+async function loadPosts(){
+  try {
+    const data = await api('GET');
+    posts = data.posts || [];
+    online = true;
+    setSync('', 'Shared board · ' + posts.length + (posts.length === 1 ? ' report' : ' reports') + ' campus-wide');
+  } catch {
+    online = false;
+    posts = loadLocal();
+    setSync('offline', 'Offline mode · reports are saved to this browser only');
+  }
+  renderPosts();
+}
+
+function ago(ts){
+  const days = Math.floor((Date.now() - ts) / 864e5);
+  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+}
+
+function renderPosts(){
+  const q = lfQuery.trim().toLowerCase();
+  const rows = posts
+    .filter(p => lfFilter === 'all' ? true : lfFilter === 'open' ? !p.done : p.kind === lfFilter)
+    .filter(p => !q || [p.item, p.place, p.desc].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (a.done - b.done) || (b.at - a.at));
+
+  $('#lf-count').textContent = rows.length + (rows.length === 1 ? ' report' : ' reports');
+
+  $('#lf-list').innerHTML = rows.length ? rows.map(p => `<li class="card${p.done ? ' done' : ''}" style="--bar:var(--${p.kind === 'lost' ? 'coral' : 'leaf'})">
+      <span class="card-main">
+        <h3>${esc(p.item)}</h3>
+        ${p.desc ? `<p>${esc(p.desc)}</p>` : ''}
+        <span class="meta">
+          <span class="tag ${p.kind}">${p.kind === 'lost' ? 'Lost' : 'Found'}</span>
+          <span>${esc(p.place)}</span><span class="dot"></span><span>${ago(p.at)}</span>
+          ${p.contact ? `<span class="dot"></span><span>${esc(p.contact)}</span>` : ''}
+        </span>
+      </span>
+      <button class="resolve" data-id="${esc(p.id)}">${p.done ? 'Reopen' : 'Mark resolved'}</button>
+    </li>`).join('') : `<li class="empty"><b>No reports yet</b>Submit the first one using the form.</li>`;
+
+  $('#s-open').textContent = posts.filter(p => !p.done).length;
+  stagger($('#panel-lostfound'));
+}
+
+$('#lf-list').addEventListener('click', async e => {
+  const btn = e.target.closest('[data-id]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const card = btn.closest('.card');
+  card.classList.add('pending');
+
+  if (online){
+    try {
+      const data = await api('PATCH', { id });
+      posts = data.posts || posts;
+    } catch {
+      setSync('error', 'Could not reach the server. Showing the last loaded data.');
+    }
+  } else {
+    const p = posts.find(x => x.id === id);
+    if (p) p.done = !p.done;
+    saveLocal();
+  }
+  renderPosts();
+});
+
+const glide = $('.toggle-glide');
+$$('#lf-kind button').forEach((b, i) => b.addEventListener('click', () => {
+  lfKind = b.dataset.kind;
+  $$('#lf-kind button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  glide.style.transform = 'translateX(' + (i * 100) + '%)';
+  glide.style.background = lfKind === 'lost' ? 'var(--coral)' : 'var(--leaf)';
+}));
+
+$$('#lf-chips .chip').forEach(c => c.addEventListener('click', () => {
+  $$('#lf-chips .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
+  lfFilter = c.dataset.f;
+  renderPosts();
+}));
+
+$('#lf-search').addEventListener('input', e => { lfQuery = e.target.value; renderPosts(); });
+
+$('#lf-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const hint = $('#lf-hint');
+  const submit = $('#lf-submit');
+  const item  = $('#lf-item').value.trim();
+  const place = $('#lf-place').value.trim();
+
+  if (!item || !place){
+    hint.className = 'hint warn';
+    hint.textContent = 'Enter the item and the location before submitting.';
+    (item ? $('#lf-place') : $('#lf-item')).focus();
+    return;
+  }
+
+  const payload = {
+    kind: lfKind, item, place,
+    desc: $('#lf-desc').value.trim(),
+    contact: $('#lf-contact').value.trim()
+  };
+
+  submit.disabled = true;
+  submit.textContent = 'Submitting…';
+  hint.className = 'hint';
+  hint.textContent = '';
+
+  if (online){
+    try {
+      const data = await api('POST', payload);
+      posts = data.posts || posts;
+      hint.className = 'hint ok';
+      hint.textContent = 'Report published to the shared board.';
+      setSync('', 'Shared board · ' + posts.length + (posts.length === 1 ? ' report' : ' reports') + ' campus-wide');
+    } catch {
+      hint.className = 'hint warn';
+      hint.textContent = 'The server could not be reached. Try again in a moment.';
+      submit.disabled = false;
+      submit.textContent = 'Submit report';
+      return;
+    }
+  } else {
+    posts.unshift({ ...payload, id:'local' + Date.now(), at: Date.now(), done:false });
+    saveLocal();
+    hint.className = 'hint ok';
+    hint.textContent = 'Saved to this browser. It will not appear for other visitors.';
+  }
+
+  e.target.reset();
+  submit.disabled = false;
+  submit.textContent = 'Submit report';
+  renderPosts();
+});
+
+loadPosts();
+setInterval(() => { if (online && !document.hidden) loadPosts(); }, 60000);  // keep the board current
+
+/* ---------------- hero counters and clock ---------------- */
+$$('[data-countto]').forEach(el => {
+  const target = +el.dataset.countto;
+  if (reduced){ el.textContent = target; return; }
+  let n = 0;
+  const step = () => {
+    n += Math.max(1, Math.ceil((target - n) / 6));
+    el.textContent = Math.min(n, target);
+    if (n < target) requestAnimationFrame(step);
+  };
+  setTimeout(() => requestAnimationFrame(step), 500);
+});
+
+(function tick(){
+  $('#clock').textContent = new Date().toLocaleString('en-IN', {
+    weekday:'long', day:'numeric', month:'long', hour:'numeric', minute:'2-digit'
+  });
+  setTimeout(tick, 30000);
+})();
+</script>
+</body>
+</html>
